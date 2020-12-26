@@ -40,7 +40,7 @@
  */
 
 #include <XInput.h>
-//數值平滑化
+//Analog stick smoothing (value int)
 const int axisReadings = 10; //陣列取樣數
 int Xreadings[axisReadings]; // 從腳位讀取數值
 int XreadIndex = 0; // 目前讀值
@@ -62,9 +62,11 @@ int RyreadIndex = 0; // 目前讀值
 int Rytotal = 0; // the running total
 int Ryaverage = 0; // 平均值
 
+//LStick switch between Dpad and analog mode (value int)
+int Lstickmode = 0; // 0 is dpad only, 1 is analog only
 
 // Setup
-const boolean UseLeftJoystick   = false;  // set to true to enable left joystick
+const boolean UseLeftJoystick   = true;  // set to true to enable left joystick
 const boolean InvertLeftYAxis   = false;  // set to true to use inverted left joy Y
 
 const boolean UseRightJoystick  = false;  // set to true to enable right joystick
@@ -159,65 +161,49 @@ void setup() {
 }
 
 void loop() {
+//Analog stick smoothing (calc)
+	Xtotal = Xtotal - Xreadings[XreadIndex]; // subtract the last reading:
+	Xreadings[XreadIndex] = analogRead(A0); // read from the sensor:
+	Xtotal = Xtotal + Xreadings[XreadIndex]; // add the reading to the Xtotal:
+	XreadIndex = XreadIndex + 1; // advance to the next position in the array:
+	if(XreadIndex >= axisReadings ) // if we're at the end of the array...
+		{
+		XreadIndex = 0; // ...wrap around to the beginning:
+		}
+	Xaverage = Xtotal / axisReadings ; // calculate the Xaverage:
+	//
+	Ytotal = Ytotal - Yreadings[YreadIndex]; // subtract the last reading:
+	Yreadings[YreadIndex] = analogRead(A1); // read from the sensor:
+	Ytotal = Ytotal + Yreadings[YreadIndex]; // add the reading to the Ytotal:
+	YreadIndex = YreadIndex + 1; // advance to the next position in the array:
+	if(YreadIndex >= axisReadings ) // if we're at the end of the array...
+		{
+		YreadIndex = 0; // ...wrap around to the beginning:
+		}
+	Yaverage = Ytotal / axisReadings ; // calculate the Yaverage:
+	//
+	Rxtotal = Rxtotal - Rxreadings[RxreadIndex]; // subtract the last reading:
+	Rxreadings[RxreadIndex] = analogRead(A2); // read from the sensor:
+	Rxtotal = Rxtotal + Rxreadings[RxreadIndex]; // add the reading to the Rxtotal:
+	RxreadIndex = RxreadIndex + 1; // advance to the next position in the array:
+	if(RxreadIndex >= axisReadings ) // if we're at the end of the array...
+		{
+		RxreadIndex = 0; // ...wrap around to the beginning:
+		}
+	Rxaverage = Rxtotal / axisReadings ; // calculate the Rxaverage:
+	//
+	Rytotal = Rytotal - Ryreadings[RyreadIndex]; // subtract the last reading:
+	Ryreadings[RyreadIndex] = analogRead(A3); // read from the sensor:
+	Rytotal = Rytotal + Ryreadings[RyreadIndex]; // add the reading to the Rytotal:
+	RyreadIndex = RyreadIndex + 1; // advance to the next position in the array:
+	if(RyreadIndex >= axisReadings ) // if we're at the end of the array...
+		{
+		RyreadIndex = 0; // ...wrap around to the beginning:
+		}
+	Ryaverage = Rytotal / axisReadings ; // calculate the Ryaverage:
+	//
 
-//Deadzone adjust
-if (Xaverage < 575 and Xaverage > 425) {
-    Xaverage = 500;
-}
-if (Yaverage < 575 and Yaverage > 425) {
-    Yaverage = 500;
-}
-
-/*for some reason this doesn't work when i place at the end of the loop
-so im placing setJoystick in front of everything
-not fancy but works*/
-XInput.setJoystick(JOY_LEFT, Xaverage, Yaverage);
-XInput.setJoystick(JOY_RIGHT, Xaverage, Yaverage);
-
-  //
-Xtotal = Xtotal - Xreadings[XreadIndex]; // subtract the last reading:
-Xreadings[XreadIndex] = analogRead(A0); // read from the sensor:
-Xtotal = Xtotal + Xreadings[XreadIndex]; // add the reading to the Xtotal:
-XreadIndex = XreadIndex + 1; // advance to the next position in the array:
-if(XreadIndex >= axisReadings ) // if we're at the end of the array...
-{
-XreadIndex = 0; // ...wrap around to the beginning:
-}
-Xaverage = Xtotal / axisReadings ; // calculate the Xaverage:
-//
-Ytotal = Ytotal - Yreadings[YreadIndex]; // subtract the last reading:
-Yreadings[YreadIndex] = analogRead(A1); // read from the sensor:
-Ytotal = Ytotal + Yreadings[YreadIndex]; // add the reading to the Ytotal:
-YreadIndex = YreadIndex + 1; // advance to the next position in the array:
-if(YreadIndex >= axisReadings ) // if we're at the end of the array...
-{
-YreadIndex = 0; // ...wrap around to the beginning:
-}
-Yaverage = Ytotal / axisReadings ; // calculate the Yaverage:
-//
-Rxtotal = Rxtotal - Rxreadings[RxreadIndex]; // subtract the last reading:
-Rxreadings[RxreadIndex] = analogRead(A2); // read from the sensor:
-Rxtotal = Rxtotal + Rxreadings[RxreadIndex]; // add the reading to the Rxtotal:
-RxreadIndex = RxreadIndex + 1; // advance to the next position in the array:
-if(RxreadIndex >= axisReadings ) // if we're at the end of the array...
-{
-RxreadIndex = 0; // ...wrap around to the beginning:
-}
-Rxaverage = Rxtotal / axisReadings ; // calculate the Rxaverage:
-//
-Rytotal = Rytotal - Ryreadings[RyreadIndex]; // subtract the last reading:
-Ryreadings[RyreadIndex] = analogRead(A3); // read from the sensor:
-Rytotal = Rytotal + Ryreadings[RyreadIndex]; // add the reading to the Rytotal:
-RyreadIndex = RyreadIndex + 1; // advance to the next position in the array:
-if(RyreadIndex >= axisReadings ) // if we're at the end of the array...
-{
-RyreadIndex = 0; // ...wrap around to the beginning:
-}
-Ryaverage = Rytotal / axisReadings ; // calculate the Ryaverage:
-//
-
-
-//讀值校正
+/*讀值校正
 Serial.print("Xaverage=");
 Serial.print(Xaverage);
 Serial.print("\t");
@@ -226,7 +212,7 @@ Serial.print(Yaverage);
 Serial.print("\t");
 
 Serial.println("\t");
-//
+*/
   
 	// Read pin values and store in variables
 	// (Note the "!" to invert the state, because LOW = pressed)
@@ -265,7 +251,9 @@ Serial.println("\t");
 	XInput.setButton(BUTTON_R3, buttonR3);
 
 	// Set XInput DPAD values
+	if (Lstickmode == 0) {
 	XInput.setDpad(dpadUp, dpadDown, dpadLeft, dpadRight);
+	}
 
 	// Set XInput trigger values
 	if (UseTriggerButtons == true) {
@@ -287,31 +275,42 @@ Serial.println("\t");
 		XInput.setTrigger(TRIGGER_RIGHT, triggerRight);
 	}
 
-	// Set left joystick (moved to the front of the loop)
-	if (UseLeftJoystick == true) {
-		int leftJoyX = Xaverage;
-		int leftJoyY = Yaverage;
+
+	//Deadzone adjust
+	if (Xaverage < 575 and Xaverage > 425) {
+		Xaverage = 500;
+	}
+	if (Yaverage < 575 and Yaverage > 425) {
+		Yaverage = 500;
+	}
+
+	// Set left joystick
+	if (UseLeftJoystick == true and Lstickmode == 1) {
+		//int leftJoyX = Xaverage;
+		//int leftJoyY = Yaverage;
 
 		// White lie here... most generic joysticks are typically
 		// inverted by default. If the "Invert" variable is false
 		// then we need to do this transformation.
-		if (InvertLeftYAxis == false) {
-			leftJoyY = ADC_Max - leftJoyY;
+		if (InvertLeftYAxis == true) {
+			Yaverage = ADC_Max - Yaverage;
 		}
 
 //		XInput.setJoystick(JOY_LEFT, ADC_Max, ADC_Max);
+		XInput.setJoystick(JOY_LEFT, Xaverage, Yaverage);
 	}
 
-	// Set right joystick (moved to the front of the loop)
+	// Set right joystick 
 	if (UseRightJoystick == true) {
-		int rightJoyX = Xaverage;
-		int rightJoyY = Yaverage;
+		//int rightJoyX = Rxaverage;
+		//int rightJoyY = Ryaverage;
 
-		if (InvertRightYAxis == false) {
-			rightJoyY = ADC_Max - rightJoyY;
+		if (InvertRightYAxis == true) {
+			Ryaverage = ADC_Max - Ryaverage;
 		}
 
 //		XInput.setJoystick(JOY_RIGHT, rightJoyX, rightJoyY);
+		XInput.setJoystick(JOY_RIGHT, Rxaverage, Ryaverage);
 	}
 
 	// Send control data to the computer
