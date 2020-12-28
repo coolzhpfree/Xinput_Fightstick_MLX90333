@@ -18,3 +18,4 @@ https://github.com/dmadison/ArduinoXInput
     * Micro pin 14 is MISO, 15 is SCKL and 16 is MOSI
 - Make a 3d printed mount to fix the sensor on to a sanwa stick (I have a clone) (3d modellers plz help me) 
 
+https://forum.arduino.cc/index.php?topic=466897.0
