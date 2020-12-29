@@ -38,6 +38,18 @@
  *                different board type
  *
  */
+#include <FastLED.h>
+
+#define LED_PIN     15
+#define NUM_LEDS    1
+#define BRIGHTNESS  127
+#define LED_TYPE    WS2812
+#define COLOR_ORDER GRB
+CRGB leds[NUM_LEDS];
+#define UPDATES_PER_SECOND 100
+//int AnalogModeSwitch;
+int AnalogModeSwitch_prev;
+int AnalogModeSwitch_now;
 
 #include <XInput.h>
 //Analog stick smoothing (value int)
@@ -63,7 +75,7 @@ int Rytotal = 0; // the running total
 int Ryaverage = 0; // 平均值
 
 //LStick switch between Dpad and analog mode (value int)
-int Lstickmode = 0; // 0 is dpad only, 1 is analog only
+int Lstickmode = 1; // 0 is dpad only, 1 is analog only
 
 // Setup
 const boolean UseLeftJoystick   = true;  // set to true to enable left joystick
@@ -106,6 +118,11 @@ const int Pin_DpadUp    = 10;
 const int Pin_DpadDown  = 11;
 const int Pin_DpadLeft  = 12;
 const int Pin_DpadRight = 13;
+
+// stick mode
+const int PIN_AnalogModeSwitch = 14;
+const int LED = 15;
+
 
 void setup() {
   Serial.begin(9600);
@@ -154,10 +171,14 @@ void setup() {
 	pinMode(Pin_DpadLeft, INPUT_PULLUP);
 	pinMode(Pin_DpadRight, INPUT_PULLUP);
 
+  pinMode(PIN_AnalogModeSwitch, INPUT_PULLUP);
+  
 	XInput.setJoystickRange(300, 700);  // Rescaling for sensitivity
 	XInput.setAutoSend(false);  // Wait for all controls before sending
 
 	XInput.begin();
+
+  FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
 }
 
 void loop() {
@@ -202,6 +223,17 @@ void loop() {
 		}
 	Ryaverage = Rytotal / axisReadings ; // calculate the Ryaverage:
 	//
+
+AnalogModeSwitch_now=digitalRead(PIN_AnalogModeSwitch);
+  if(AnalogModeSwitch_prev==0 && AnalogModeSwitch_now==1){
+  if (Lstickmode==0){
+    Lstickmode=1;
+  }
+  else{
+    Lstickmode=0;
+  }
+}
+AnalogModeSwitch_prev=AnalogModeSwitch_now;
 
 /*讀值校正
 Serial.print("Xaverage=");
@@ -252,7 +284,14 @@ Serial.println("\t");
 
 	// Set XInput DPAD values
 	if (Lstickmode == 0) {
+  XInput.setJoystick(JOY_LEFT, 500, 500);
 	XInput.setDpad(dpadUp, dpadDown, dpadLeft, dpadRight);
+  
+    for(int i = 0; i < NUM_LEDS; i++ )
+      {
+       leds[i].setRGB(127,0,0); // Set Color HERE!!!
+      }
+    FastLED.show();
 	}
 
 	// Set XInput trigger values
@@ -286,18 +325,19 @@ Serial.println("\t");
 
 	// Set left joystick
 	if (UseLeftJoystick == true and Lstickmode == 1) {
-		//int leftJoyX = Xaverage;
-		//int leftJoyY = Yaverage;
-
-		// White lie here... most generic joysticks are typically
-		// inverted by default. If the "Invert" variable is false
-		// then we need to do this transformation.
+    XInput.setDpad(LOW, LOW, LOW, LOW);
 		if (InvertLeftYAxis == true) {
 			Yaverage = ADC_Max - Yaverage;
 		}
 
 //		XInput.setJoystick(JOY_LEFT, ADC_Max, ADC_Max);
 		XInput.setJoystick(JOY_LEFT, Xaverage, Yaverage);
+
+    for(int i = 0; i < NUM_LEDS; i++ )
+      {
+       leds[i].setRGB(0,0,127); // Set Color HERE!!!
+      }
+    FastLED.show();
 	}
 
 	// Set right joystick 
